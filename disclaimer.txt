@@ -1,0 +1,4 @@
+All the material contained in this repository - including code, data and other content - is provided with no warranty whatsoever.
+Any use for scientific or any other purpose is conducted at your own risk and under your own responsibility.
+The author is not liable for any damages - including any consequential damages - of any kind that may result
+from the use of the content or information in this repository or of any of the products or services hereon described. 

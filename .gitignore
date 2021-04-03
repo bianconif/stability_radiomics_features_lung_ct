@@ -1,0 +1,5 @@
+*.wpr
+*.wpu
+*.lnk
+cache/*.nrrd
+cache/*.db
