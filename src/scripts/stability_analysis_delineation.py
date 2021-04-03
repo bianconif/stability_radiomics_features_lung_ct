@@ -4,6 +4,7 @@ import pingouin as pg
 import pylidc as pl
 
 from functions import grade_stability
+from utilities import DBDriver
 
 #Number of requested observers (different lesion delineations) for each nodule
 num_requested_annotations = 4
@@ -15,9 +16,10 @@ noise_scale = 0.0
 num_levels = 256
 
 #Get the feature database
-df_features = pd.read_csv('cache/feature_db.csv')
+db_file = 'cache/features.db'
+db_driver = DBDriver.generate_from_file(db_file)
 
-#Store the results of stability analysis here
+#Store the results of the stability analysis here
 out_file = 'cache/stability_against_delineation.csv'
 
 #Get the list of patients IDs

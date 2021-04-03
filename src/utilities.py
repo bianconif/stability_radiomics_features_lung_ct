@@ -43,9 +43,46 @@ def metadata_from_dicom_folder(dicom_folder):
 class DBDriver():
     """Database interface for storing and retrieving the feature values"""
     
+    @classmethod
+    def generate_from_file(cls, db_file):
+        """Opens a connection to an existing db_file if this exists.
+        
+        Parameters
+        ----------
+        db_file : str
+            Path to the database file (.db).
+        """  
+        
+        if not isfile(db_file):
+            raise Exception('Database file not found')
+        
+        #Open a connection
+        connection = sqlite3.connect(db_file) 
+        
+        #Get the feature names
+        command_str = "SELECT * FROM PRAGMA_TABLE_INFO('features')"
+        cur = connection.cursor()
+        cur.execute(command_str) 
+        rows = cur.fetchall()    
+        feature_names = list()
+        for row in rows:
+            if '_' in row[1]:
+                feature_names.append(DBDriver._unmangle_feature_name(row[1]))
+           
+        #Close the connection to the database
+        connection.close()
+        
+        #Instantiate and return the DBDriver
+        return DBDriver(feature_names, db_file)
+    
+    
     @staticmethod
     def _mangle_feature_name(feature_name):
         return feature_name.replace("/","_")
+    
+    @staticmethod
+    def _unmangle_feature_name(feature_name):
+        return feature_name.replace("_","/")    
     
     @staticmethod
     def _experimental_condition(patient_id, nodule_id, annotation_id, 
@@ -147,6 +184,21 @@ class DBDriver():
             feature_value = rows[0][0]
         
         return feature_value
+    
+    def get_patients_ids(self):
+        """Unique list of patients' ids
+        
+        Returns
+        -------
+        patients_ids : list of str
+            The unique list of patients' ids
+        """
+        
+        command_str = f"SELECT DISTINCT {patient_id} FROM features"
+        cur = self._connection.cursor()
+        cur.execute(command_str)        
+        rows = cur.fetchall()    
+        a = 0
         
     def write_feature_value(self, patient_id, nodule_id, annotation_id, 
                             num_levels, noise_scale, feature_name, 
