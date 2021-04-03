@@ -73,7 +73,7 @@ patient_population = pd.read_csv('cache/scans_metadata.csv')
 selected_scans = patient_population['patient_id'].tolist()
 
 #--- DEBUG --- Limit the total number of scan processed
-selected_scans = selected_scans[0:2]
+#selected_scans = selected_scans[0:2]
 
 #*******************************************************************************
 #**************************** Progress window **********************************
