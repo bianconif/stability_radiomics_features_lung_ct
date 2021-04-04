@@ -2,7 +2,6 @@
 import pandas as pd
 import pylidc as pl
 import PySimpleGUI as sg
-import radiomics
 
 from functions import get_feature_values
 from utilities import DBDriver
