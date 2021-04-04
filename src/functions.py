@@ -223,8 +223,8 @@ def get_feature_values(feature_names, patient_id, nodule_id, annotation_id,
             record_str = f'patient_id : {patient_id}, nodule_id : {nodule_id}, '+\
                 f'annotation_id : {annotation_id}, num_levels : {num_levels} '+\
                 f'noise_scale : {noise_scale}\n'+\
-                f'feature_names : {feature_names_and_values.keys()}'
-            print(f'Retried {record_str}')             
+                f'feature_names : {list(feature_names_and_values.keys())}'
+            print(f'Retrived {record_str}')             
             
     
     #Determine which features still needs to be computed

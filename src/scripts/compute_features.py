@@ -57,13 +57,14 @@ features_to_compute = first_order_statistics + glcm + gldm + glrlm + glszm +\
     ngtdm
 
 #CT window
-ct_window = (-593, 161)
+ct_window = (-583, 137)
 
 #Number of levels for signal resampling 
 num_levelss = [32, 64, 128, 256]
 
 #Level of Gaussian noise
 noise_scales = [0.0, 2.5, 5.0, 10.0]
+
 #*******************************************************************************
 #*******************************************************************************
 #*******************************************************************************
