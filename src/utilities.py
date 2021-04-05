@@ -65,8 +65,10 @@ class DBDriver():
         cur.execute(command_str) 
         rows = cur.fetchall()    
         feature_names = list()
+        to_exclude = {'patient_id', 'nodule_id', 'annotation_id',
+                      'noise_scale', 'num_levels'}
         for row in rows:
-            if '_' in row[1]:
+            if row[1] not in to_exclude:
                 feature_names.append(DBDriver._unmangle_feature_name(row[1]))
            
         #Close the connection to the database
@@ -96,6 +98,11 @@ class DBDriver():
                     f"noise_scale={noise_scale}"    
         return condition
     
+    def _execute_query(self, command_str):
+        cur = self._connection.cursor()
+        cur.execute(command_str)        
+        return cur.fetchall()        
+    
     def _get_row(self, patient_id, nodule_id, annotation_id, num_levels,
                  noise_scale):
         """Returns the row matching the given patient_id, nodule_id, 
@@ -104,14 +111,15 @@ class DBDriver():
         condition = self.__class__._experimental_condition(
             patient_id, nodule_id, annotation_id, num_levels, noise_scale)
         command_str = f"SELECT * FROM features WHERE {condition}"
-        cur = self._connection.cursor()
-        cur.execute(command_str) 
-        rows = cur.fetchall()
+        rows = self._execute_query(command_str)
         
         if len(rows) > 1:
             raise Exception('Internal error: detected multiple rows for the'
                             'same experimental condition') 
         return rows
+    
+    def get_feature_names(self):
+        return self._feature_names
    
     def _create_new(self):
         """Generates an empty table"""
@@ -165,9 +173,7 @@ class DBDriver():
         command_str = f"SELECT {feature_name} FROM features WHERE "+\
             self.__class__._experimental_condition(
                 patient_id, nodule_id, annotation_id, num_levels, noise_scale)
-        cur = self._connection.cursor()
-        cur.execute(command_str)        
-        rows = cur.fetchall()
+        rows = self._execute_query(command_str)
         
         #Make sure that only one value is returned and raise an exception
         #otherwise
@@ -185,8 +191,45 @@ class DBDriver():
         
         return feature_value
     
+    def get_feature_values_by_annotation(self, patient_id, nodule_id,
+                                         feature_name, num_levels = 256,
+                                         noise_scale = 0.0):
+        """For a given patient, nodule and feature name returns the feature
+        values for each of the annotations available in the database. The
+        50% consenus annotation is excluded.
+        
+        Parameters
+        ----------
+        patient_id : str 
+            The patient id.
+        feature_name : str
+            The name of the feature to retrieve.
+        nodule_id : int 
+            The nodule id.
+        num_levels : int [> 0] 
+            The number of quantisation levels
+        noise_scale : float 
+            The noise scale.
+        
+        Returns
+        -------
+        feature_values : list of float
+            The feature values. These are as many as the number of delineations
+            for the given nodule.
+        """
+        command_str = f"SELECT {self._mangle_feature_name(feature_name)} FROM features "+\
+                      f"WHERE patient_id = '{patient_id}' "+\
+                      f"AND nodule_id = {nodule_id} "+\
+                      f"AND num_levels = {num_levels} "+\
+                      f"AND noise_scale = {noise_scale} "+\
+                      f"AND annotation_id != -1 "+\
+                      f"ORDER BY annotation_id"
+        rows = self._execute_query(command_str)
+        feature_values = [row[0] for row in rows]
+        return feature_values
+    
     def get_patients_ids(self):
-        """Unique list of patients' ids
+        """Returns the unique list of patients' ids
         
         Returns
         -------
@@ -194,11 +237,55 @@ class DBDriver():
             The unique list of patients' ids
         """
         
-        command_str = f"SELECT DISTINCT {patient_id} FROM features"
-        cur = self._connection.cursor()
-        cur.execute(command_str)        
-        rows = cur.fetchall()    
-        a = 0
+        command_str = f"SELECT DISTINCT patient_id FROM features"
+        rows = self._execute_query(command_str)    
+        patients_ids = [row[0] for row in rows]
+        return patients_ids
+    
+    def get_nodule_ids_by_patient(self, patient_id):
+        """Returns the unique list of nodules' ids for the given patient.
+        
+        Parameters
+        ----------
+        patient_id : str 
+            The patient id.
+        
+        Returns
+        -------
+        nodules_ids : list of int
+            The unique list of nodule ids for the given patient.
+        """
+        
+        command_str = f"SELECT DISTINCT nodule_id FROM features "+\
+                      f"WHERE patient_id='{patient_id}'"
+        rows = self._execute_query(command_str)    
+        nodules_ids = [row[0] for row in rows]
+        return nodules_ids
+    
+    def get_annotation_ids_by_nodule(self, patient_id, nodule_id):
+        """Returns the unique list of annotations' ids for the given patient
+        and nodule (the 50% consenus annotation is excluded).
+        
+        Parameters
+        ----------
+        patient_id : str 
+            The patient id.
+        nodule_id : int 
+            The nodule id.
+        
+        Returns
+        -------
+        nodules_ids : list of int
+            The unique list of nodule ids for the given patient.
+        """
+        
+        command_str = f"SELECT DISTINCT annotation_id FROM features "+\
+                      f"WHERE patient_id='{patient_id}' "+\
+                      f"AND nodule_id='{nodule_id}' "+\
+                      f"AND annotation_id != -1 "
+        rows = self._execute_query(command_str)    
+        annotation_ids = [row[0] for row in rows]
+        return annotation_ids    
         
     def write_feature_value(self, patient_id, nodule_id, annotation_id, 
                             num_levels, noise_scale, feature_name, 

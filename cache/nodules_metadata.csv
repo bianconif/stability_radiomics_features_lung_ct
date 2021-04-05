@@ -1,4 +1,4 @@
-patient_id,nodule_id,num_annotations,annotation_id,subtlety,internalStructure,calcification,sphericity,margin,lobulation,spiculation,texture,malignancy
+patient_id,nodule_id,num_annotations,annotation_id,subtlety,internal_structure,calcification,sphericity,margin,lobulation,spiculation,texture,malignancy
 LIDC-IDRI-0078,0,4,1,4,1,6,4,2,2,1,5,4
 LIDC-IDRI-0078,0,4,2,5,1,6,4,4,4,4,5,5
 LIDC-IDRI-0078,0,4,3,5,1,6,4,3,2,2,4,3

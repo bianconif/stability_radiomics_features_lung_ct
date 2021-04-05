@@ -99,7 +99,7 @@ for patient_id in selected_scans:
             annotation_record.update(OrderedDict(
                 {'annotation_id' : idx_ann,
                  'subtlety' : nodule[ann].subtlety,
-                 'internalStructure' : nodule[ann].internalStructure,
+                 'internal_structure' : nodule[ann].internalStructure,
                  'calcification' : nodule[ann].calcification,
                  'sphericity' : nodule[ann].sphericity,
                  'margin' : nodule[ann].margin,

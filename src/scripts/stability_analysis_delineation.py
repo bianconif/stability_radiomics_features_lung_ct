@@ -23,27 +23,22 @@ db_driver = DBDriver.generate_from_file(db_file)
 out_file = 'cache/stability_against_delineation.csv'
 
 #Get the list of patients IDs
-patient_ids = set(df_features['patient_id'].to_list())
+patient_ids = db_driver.get_patients_ids()
 
 #Select the nodules with the requested number of annotations
 selected_nodules = list()
 for patient_id in patient_ids:
-    nodule_ids = set(
-        df_features[df_features['patient_id'] == patient_id]['nodule_id'].to_list()
-    )
+    nodule_ids = db_driver.get_nodule_ids_by_patient(patient_id)
     for nodule_id in nodule_ids:
-        annotation_query = (df_features['patient_id'] == patient_id) &\
-                           (df_features['nodule_id'] == nodule_id) &\
-                           (df_features['annotation_id'] != -1)
-        annotations = df_features[annotation_query]['annotation_id'].to_list()
-        
-        if len(set(annotations)) == num_requested_annotations:
+        annotation_ids = db_driver.get_annotation_ids_by_nodule(patient_id, 
+                                                                nodule_id)        
+        if len(annotation_ids) == num_requested_annotations:
             selected_nodules.append(
                 {'patient_id' : patient_id, 'nodule_id' : nodule_id}
             )
 
 #Get the list of the features available
-available_features = set(df_features['feature_name'].to_list())
+available_features = db_driver.get_feature_names()
 
 #Dataframe to store the ICC
 df_delineation_icc = pd.DataFrame(columns = ['feature_name', 
@@ -63,30 +58,21 @@ for feature_name in available_features:
     df_data_matrix = pd.DataFrame(columns = annotation_columns)    
     
     for selected_nodule_id, selected_nodule in enumerate(selected_nodules):
-        annotation_query =\
-            (df_features['feature_name'] == feature_name) &\
-            (df_features['patient_id'] == selected_nodule['patient_id']) &\
-            (df_features['nodule_id'] == selected_nodule['nodule_id']) &\
-            (df_features['annotation_id'] != -1)
-        annotations = set(df_features[annotation_query]['annotation_id'].to_list()) 
+        patient_id = selected_nodule['patient_id']
+        nodule_id = selected_nodule['nodule_id']
         
         #Fill the data matrix
         data_row = {'feature_name' : feature_name,
-                    'patient_id' : selected_nodule['patient_id'],
-                    'nodule_id' : selected_nodule['nodule_id'],
+                    'patient_id' : patient_id,
+                    'nodule_id' : nodule_id,
                     'patient_and_nodule_id' : selected_nodule_id,
                     }
-        for annotation_id, annotation in enumerate(annotations):
-            feature_query =\
-                (df_features['feature_name'] == feature_name) &\
-                (df_features['patient_id'] == selected_nodule['patient_id']) &\
-                (df_features['nodule_id'] == selected_nodule['nodule_id']) &\
-                (df_features['num_levels'] == num_levels) &\
-                (df_features['noise_scale'] == noise_scale) &\
-                (df_features['annotation_id'] == annotation)  
-            feature_value = df_features[feature_query]['value'].to_list()[0]
+
+        feature_values = db_driver.get_feature_values_by_annotation(
+            patient_id, nodule_id, feature_name, num_levels, noise_scale)
+        for annotation_id, feature_value in enumerate(feature_values):
             data_row.update({'feature_value' : feature_value,
-                             'annotation_id' : annotation})
+                             'annotation_id' : annotation_id})
             df_data_matrix = df_data_matrix.append(data_row, 
                                                    ignore_index = True)
     
@@ -99,6 +85,7 @@ for feature_name in available_features:
                    'feature_name' : feature_name.split('/', 1)[1],
                    'stability' : grade_stability(icc['ICC'][3]),
                    'ICC1k' : icc['ICC'][3]}
+    print(results_row)
     df_delineation_icc = df_delineation_icc.append(results_row, 
                                                    ignore_index = True)
 df_delineation_icc.to_csv(out_file, index = False)
