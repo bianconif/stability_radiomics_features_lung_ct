@@ -15,7 +15,7 @@ from utilities import DBDriver
 cache_folder = 'cache'
 signal_cache = cache_folder + '/signal.nrrd'
 mask_cache = cache_folder + '/mask.nrrd'
-feature_db = cache_folder + '/features.db' 
+feature_db = cache_folder + '/features.db'
 
 #List of the features to compute
 first_order_statistics = ['Entropy', 'IQR', 'Kurtosis', 'MAD', 'Max', 'Mean', 
@@ -61,6 +61,7 @@ ct_window = (-583, 137)
 #Number of levels for signal resampling 
 num_levelss = [32, 64, 128, 256]
 
+
 #Level of Gaussian noise
 noise_scales = [0.0, 2.5, 5.0, 10.0]
 
@@ -79,7 +80,7 @@ selected_scans = patient_population['patient_id'].tolist()
 #**************************** Progress window **********************************
 #*******************************************************************************
 
-sg.theme('Dark Red')
+#sg.theme('Dark Red')
 
 BAR_MAX = 100
 

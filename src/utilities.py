@@ -228,6 +228,46 @@ class DBDriver():
         feature_values = [row[0] for row in rows]
         return feature_values
     
+    def get_feature_value_on_consensus_annotation(
+        self, patient_id, nodule_id, feature_name, num_levels = 256, 
+        noise_scale = 0.0):
+        """For a given patient, nodule and feature name returns the feature
+        value for the 50% consenus annotation.
+        
+        Parameters
+        ----------
+        patient_id : str 
+            The patient id.
+        feature_name : str
+            The name of the feature to retrieve.
+        nodule_id : int 
+            The nodule id.
+        num_levels : int [> 0] 
+            The number of quantisation levels
+        noise_scale : float 
+            The noise scale.
+        
+        Returns
+        -------
+        feature_value : float
+            The feature value.
+        """
+        command_str = f"SELECT {self._mangle_feature_name(feature_name)} FROM features "+\
+                      f"WHERE patient_id = '{patient_id}' "+\
+                      f"AND nodule_id = {nodule_id} "+\
+                      f"AND num_levels = {num_levels} "+\
+                      f"AND noise_scale = {noise_scale} "+\
+                      f"AND annotation_id == -1"
+        rows = self._execute_query(command_str)
+        
+        #If there's more than one row there's something wrong
+        if len(rows) > 1:
+            raise Exception('More than one entry found for the given query')
+        
+        feature_value = rows[0][0]
+        return feature_value
+    
+    
     def get_patients_ids(self):
         """Returns the unique list of patients' ids
         

@@ -43,7 +43,7 @@ available_features = db_driver.get_feature_names()
 #Dataframe to store the ICC
 df_delineation_icc = pd.DataFrame(columns = ['feature_name', 
                                              'feature_class',
-                                             'ICC1k',
+                                             'ICC',
                                              'stability']
                                   )
 
@@ -84,7 +84,7 @@ for feature_name in available_features:
     results_row = {'feature_class' : feature_name.split('/', 1)[0],
                    'feature_name' : feature_name.split('/', 1)[1],
                    'stability' : grade_stability(icc['ICC'][3]),
-                   'ICC1k' : icc['ICC'][3]}
+                   'ICC' : icc['ICC'][3]}
     print(results_row)
     df_delineation_icc = df_delineation_icc.append(results_row, 
                                                    ignore_index = True)

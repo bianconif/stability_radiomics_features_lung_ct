@@ -96,7 +96,7 @@ feature_lut = {'firstorder/Energy' : {'firstorder' : ['Energy']},
                'ngtdm/Busyness' : {'ngtdm' : ['Busyness']},
                'ngtdm/Complexity' : {'ngtdm' : ['Complexity']},
                'ngtdm/Strength' : {'ngtdm' : ['Strength']},
-               'shape3D/MaxAxialDiameter' : {'shape' : ['Maximum2DDiameterSlice']}
+               'shape/MaxAxialDiameter' : {'shape' : ['Maximum2DDiameterSlice']}
                }
 
 def preprocess_signal(signal_in, window = (-1350, 150), num_levels = 256,
