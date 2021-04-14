@@ -1,4 +1,4 @@
-"""Stability of texture features against lesion delineation"""
+"""Stability of texture features against resampling"""
 import numpy as np
 import pandas as pd
 import pingouin as pg
@@ -8,20 +8,20 @@ from functions import grade_stability
 from utilities import DBDriver
 
 #Number of discretization levels at which the analysis is performed
-num_levels = 256
+num_levelss = [32, 64, 128, 256]
 
 #Annotation id for which the analysis is performed
 annotation_id = -1
 
-#Noise scales at which the analysis is performed
-noise_scales = [0.0, 2.5, 5.0, 10.0]
+#Noise scale at which the analysis is performed
+noise_scale = 0.0
 
 #Get the feature database
 db_file = 'cache/features.db'
 db_driver = DBDriver.generate_from_file(db_file)
 
 #Store the results of the stability analysis here
-out_file = 'cache/stability_against_noise.csv'
+out_file = 'cache/stability_against_resampling.csv'
 
 #Get the list of patients IDs
 patient_ids = db_driver.get_patients_ids()
@@ -54,13 +54,13 @@ for feature_name in available_features:
                         'patient_and_nodule_id' : f'{patient_id}--{nodule_id}'
                         }
             
-            for noise_scale_id, noise_scale in enumerate(noise_scales):
+            for num_levels_id, num_levels in enumerate(num_levelss):
                 feature_value = db_driver.\
                     get_feature_value_on_consensus_annotation(
                         patient_id, nodule_id, feature_name, num_levels, 
                         noise_scale)
                 data_row.update({'feature_value' : feature_value,
-                                 'noise_scale_id' : f'{noise_scale_id:d}'})
+                                 'num_levels_id' : f'{num_levels_id:d}'})
                 df_data_matrix = df_data_matrix.append(data_row, 
                                                        ignore_index = True)
     
@@ -73,12 +73,12 @@ for feature_name in available_features:
     #Compute the intra-class correlation coefficient
     icc = pg.intraclass_corr(data = df_data_matrix, 
                              targets = 'patient_and_nodule_num_id', 
-                             raters = 'noise_scale_id', 
+                             raters = 'num_levels_id', 
                              ratings = 'feature_value').round(3)
     results_row = {'feature_class' : feature_name.split('/', 1)[0],
                    'feature_name' : feature_name.split('/', 1)[1],
-                   'stability' : grade_stability(icc['ICC'][4]),
-                   'ICC' : icc['ICC'][4]}
+                   'stability' : grade_stability(icc['ICC'][5]),
+                   'ICC' : icc['ICC'][5]}
     print(results_row)
     df_noise_icc = df_noise_icc.append(results_row, ignore_index = True)
 df_noise_icc.to_csv(out_file, index = False)
