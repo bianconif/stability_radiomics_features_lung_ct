@@ -55,6 +55,7 @@ ngtdm = ['ngtdm/' + x for x in ngtdm]
 features_to_compute = first_order_statistics + glcm + gldm + glrlm + glszm +\
     ngtdm
 
+
 #CT window
 ct_window = (-583, 137)
 
@@ -63,7 +64,14 @@ num_levelss = [32, 64, 128, 256]
 
 
 #Level of Gaussian noise
-noise_scales = [0.0, 2.5, 5.0, 10.0]
+noise_scales = [0.0, 5.0, 10.0, 15.0]
+
+#Debug
+features_to_compute = ['firstorder/Mean', 'firstorder/Max', 'firstorder/Min',
+                       'firstorder/Std', 'firstorder/Entropy', 
+                       'glcm/JointEntropy']
+ct_window = (-583, 137)
+num_levelss = [256]
 
 #*******************************************************************************
 #*******************************************************************************
@@ -74,7 +82,7 @@ patient_population = pd.read_csv('cache/scans_metadata.csv')
 selected_scans = patient_population['patient_id'].tolist()
 
 #--- DEBUG --- Limit the total number of scan processed
-#selected_scans = selected_scans[0:2]
+selected_scans = selected_scans[0:7]
 
 #*******************************************************************************
 #**************************** Progress window **********************************

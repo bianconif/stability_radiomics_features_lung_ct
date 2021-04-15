@@ -14,7 +14,7 @@ num_levels = 256
 annotation_id = -1
 
 #Noise scales at which the analysis is performed
-noise_scales = [0.0, 2.5, 5.0, 10.0]
+noise_scales = [0.0, 5.0, 10.0, 15.0]
 
 #Get the feature database
 db_file = 'cache/features.db'
