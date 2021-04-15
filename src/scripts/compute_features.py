@@ -64,14 +64,7 @@ num_levelss = [32, 64, 128, 256]
 
 
 #Level of Gaussian noise
-noise_scales = [0.0, 5.0, 10.0, 15.0]
-
-#Debug
-features_to_compute = ['firstorder/Mean', 'firstorder/Max', 'firstorder/Min',
-                       'firstorder/Std', 'firstorder/Entropy', 
-                       'glcm/JointEntropy']
-ct_window = (-583, 137)
-num_levelss = [256]
+noise_scales = [0.0]
 
 #*******************************************************************************
 #*******************************************************************************
@@ -80,9 +73,6 @@ num_levelss = [256]
 #Get the list of the selected CT scans
 patient_population = pd.read_csv('cache/scans_metadata.csv')
 selected_scans = patient_population['patient_id'].tolist()
-
-#--- DEBUG --- Limit the total number of scan processed
-selected_scans = selected_scans[0:7]
 
 #*******************************************************************************
 #**************************** Progress window **********************************
