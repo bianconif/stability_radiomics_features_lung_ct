@@ -77,8 +77,8 @@ for feature_name in available_features:
                              ratings = 'feature_value').round(3)
     results_row = {'feature_class' : feature_name.split('/', 1)[0],
                    'feature_name' : feature_name.split('/', 1)[1],
-                   'stability' : grade_stability(icc['ICC'][5]),
-                   'ICC' : icc['ICC'][5]}
+                   'stability' : grade_stability(icc['ICC'][2]),
+                   'ICC' : icc['ICC'][2]}
     print(results_row)
     df_noise_icc = df_noise_icc.append(results_row, ignore_index = True)
 df_noise_icc.to_csv(out_file, index = False)
