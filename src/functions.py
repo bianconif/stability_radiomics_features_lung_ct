@@ -378,8 +378,13 @@ def grade_stability(icc_value):
     
     qualitative_label = None
     
-    if (icc_value < 0.0) or (icc_value > 1.0):
-        raise Exception('The ICC value needs to be in [0,1]')
+    if (icc_value < 0.0):
+        print('Warning: ICC value < 0.0; set to 0.0')  
+        icc_value = 0.0
+    if (icc_value > 1.0):
+        print('Warning: ICC value > 1.0; set to 1.0')  
+        icc_value = 1.0
+
     
     if icc_value < 0.5:
         qualitative_label = 'poor' 
