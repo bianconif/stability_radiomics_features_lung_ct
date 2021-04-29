@@ -355,44 +355,69 @@ def compute_feature_values(feature_names, path_to_image, path_to_mask,
     
     return feature_values
 
-def grade_stability(icc_value):
-    """Qualitative label for icc value
+def grade_stability(avg_abs_rel_diff):
+    """Qualitative label for average absolute relative difference
     
     Parameters
     ----------
-    icc_value : float [0,1]
-        The intra-class correlation value
+    avg_abs_rel_diff : float (> 0)
+        The average absolute relative difference.
     
     Returns
     -------
     qualitative_label : str
         The qualitative label for the given icc. Can be: 'poor', 'moderate',
         'good' or 'excellent'
-        
-    References
-    ----------
-    [1] Koo, T.K., Li, M.Y. A Guideline of Selecting and Reporting Intraclass 
-        Correlation Coefficients for Reliability Research (2016) 
-        Journal of Chiropractic Medicine, 15 (2), pp. 155-163.
     """
     
     qualitative_label = None
     
-    if (icc_value < 0.0):
-        print('Warning: ICC value < 0.0; set to 0.0')  
-        icc_value = 0.0
-    if (icc_value > 1.0):
-        print('Warning: ICC value > 1.0; set to 1.0')  
-        icc_value = 1.0
-
-    
-    if icc_value < 0.5:
-        qualitative_label = 'poor' 
-    elif (icc_value >= 0.5) and (icc_value < 0.75):
-        qualitative_label = 'moderate' 
-    elif (icc_value >= 0.75) and (icc_value <= 0.9):
-        qualitative_label = 'good'
+    if avg_abs_rel_diff <= 5.0:
+        qualitative_label = 'excellent' 
+    elif avg_abs_rel_diff <= 10.0:
+        qualitative_label = 'good' 
+    elif avg_abs_rel_diff <= 20.0:
+        qualitative_label = 'moderate'
     else:
-        qualitative_label = 'excellent'
+        qualitative_label = 'poor'
     
     return qualitative_label
+
+def avg_percent_abs_diff(values):
+    """Average percentage absolute difference among a set of values. The 
+    result is computed by taking each of the values at a time as the reference
+    and averaging the results.
+    
+    Parameters
+    ----------
+    values : list of numerics.
+    
+    Returns
+    -------
+    avg_abs_diff : float
+        The average absolute difference (as a percentage).
+    """
+    
+    abs_relative_diffs = list()
+    tol = 1e-05
+    
+    values = values - np.mean(values)
+    
+    for idx_ref_value, ref_value in enumerate(values):
+        idxs_other_values = list(range(len(values)))
+        idxs_other_values.remove(idx_ref_value)
+        for idx_other_value in idxs_other_values:
+            other_value = values[idx_other_value]
+            
+            #Check for null values
+            if abs(ref_value) > tol:    
+                abs_relative_diff = 100 * abs((ref_value - other_value)/ref_value)
+            else:
+                abs_relative_diff = 0.0
+            abs_relative_diffs.append(abs_relative_diff)
+            
+    avg_abs_diff = np.mean(abs_relative_diffs)
+    return avg_abs_diff
+ 
+    
+    

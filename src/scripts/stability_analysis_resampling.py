@@ -1,10 +1,9 @@
 """Stability of texture features against resampling"""
 import numpy as np
 import pandas as pd
-import pingouin as pg
 import pylidc as pl
 
-from functions import grade_stability
+from functions import grade_stability, avg_percent_abs_diff
 from utilities import DBDriver
 
 #Number of discretization levels at which the analysis is performed
@@ -28,59 +27,52 @@ patient_ids = db_driver.get_patients_ids()
 
 #Get the list of the features available
 available_features = db_driver.get_feature_names()
+#available_features = ['firstorder/Max']
 
 #Dataframe to store the ICC
-df_noise_icc = pd.DataFrame(columns = ['feature_name', 'feature_class',
+df_resampling_stability = pd.DataFrame(columns = ['feature_name', 'feature_class',
                                        'ICC', 'stability'])
 
 #Iterate through the available features and compute the icc for each of them
 for feature_name in available_features:
     
-    #Data matrix to compute the ICC. Rows represent nodules, columns the
-    #feature values corresponding to each level of noise
-    noise_columns = ['feature_name', 'patient_id', 'nodule_id',
-                     'patient_and_nodule_id', 'noise_scale_id']
-    df_data_matrix = pd.DataFrame(columns = noise_columns)    
-    
+    abs_relative_variation = list()
+      
     for patient_id in patient_ids:
         nodule_ids = db_driver.get_nodule_ids_by_patient(patient_id)
         for nodule_id in nodule_ids:        
         
-        #Fill the data matrix
-            data_row = {'feature_name' : feature_name,
-                        'patient_id' : patient_id,
-                        'nodule_id' : nodule_id,
-                        'patient_and_nodule_id' : f'{patient_id}--{nodule_id}'
-                        }
+            #Store the feature values by number of sampling levels
+            feature_values_by_sampling_levels = list()
             
             for num_levels_id, num_levels in enumerate(num_levelss):
                 feature_value = db_driver.\
                     get_feature_value_on_consensus_annotation(
                         patient_id, nodule_id, feature_name, num_levels, 
                         noise_scale)
-                data_row.update({'feature_value' : feature_value,
-                                 'num_levels_id' : f'{num_levels_id:d}'})
-                df_data_matrix = df_data_matrix.append(data_row, 
-                                                       ignore_index = True)
-    
-    #Convert patient_and_nodule_id from unique strings to unique ints
-    _, _, patient_and_nodule_num_id = np.unique(
-        df_data_matrix['patient_and_nodule_id'].tolist(),
-        return_index = True, return_inverse = True) 
-    df_data_matrix['patient_and_nodule_num_id'] = patient_and_nodule_num_id
+                feature_values_by_sampling_levels.append(feature_value)
+            
+            #Compute the average relative variation by nodule and append it to 
+            #the list
+            abs_relative_variation_by_nodule = avg_percent_abs_diff(
+                feature_values_by_sampling_levels)
+            abs_relative_variation.append(abs_relative_variation_by_nodule)
+            a = 0
         
-    #Compute the intra-class correlation coefficient
-    icc = pg.intraclass_corr(data = df_data_matrix, 
-                             targets = 'patient_and_nodule_num_id', 
-                             raters = 'num_levels_id', 
-                             ratings = 'feature_value').round(3)
+    #Compute the average relative variation for the whole population
+    avg_abs_relative_variation = np.mean(abs_relative_variation)
+
+    print(f'Feature: {feature_name}; '
+          f'Average absolute variation: {avg_abs_relative_variation:.2f}%')
+    
+    #Generate record for csv output
     results_row = {'feature_class' : feature_name.split('/', 1)[0],
                    'feature_name' : feature_name.split('/', 1)[1],
-                   'stability' : grade_stability(icc['ICC'][1]),
-                   'ICC' : icc['ICC'][1]}
-    print(results_row)
-    df_noise_icc = df_noise_icc.append(results_row, ignore_index = True)
-df_noise_icc.to_csv(out_file, index = False)
+                   'stability' : grade_stability(avg_abs_relative_variation),
+                   'ICC' : avg_abs_relative_variation}    
+    
+    df_resampling_stability.append(results_row, ignore_index = True)
+df_resampling_stability.to_csv(out_file, index = False)
             
     
 

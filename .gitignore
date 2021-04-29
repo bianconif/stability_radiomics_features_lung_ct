@@ -2,3 +2,4 @@
 *.wpu
 *.lnk
 cache/*
+src/__pycache__/*
