@@ -1,4 +1,7 @@
 import os
+import warnings
+
+from itertools import permutations
 
 import numpy as np
 import nrrd
@@ -355,69 +358,106 @@ def compute_feature_values(feature_names, path_to_image, path_to_mask,
     
     return feature_values
 
-def grade_stability(avg_abs_rel_diff):
-    """Qualitative label for average absolute relative difference
+def grade_stability(avg_smape):
+    """Qualitative label for the average symmetric mean absolute percentage 
+    error (SMAPE).
     
     Parameters
     ----------
-    avg_abs_rel_diff : float (> 0)
+    avg_smape : float (> 0)
         The average absolute relative difference.
     
     Returns
     -------
     qualitative_label : str
-        The qualitative label for the given icc. Can be: 'poor', 'moderate',
-        'good' or 'excellent'
+        The qualitative label for the given average SMAPE. Can be: 'poor', 
+        'moderate', 'good' or 'excellent'
     """
     
     qualitative_label = None
     
-    if avg_abs_rel_diff <= 5.0:
+    if avg_smape <= 5.0:
         qualitative_label = 'excellent' 
-    elif avg_abs_rel_diff <= 10.0:
+    elif avg_smape <= 10.0:
         qualitative_label = 'good' 
-    elif avg_abs_rel_diff <= 20.0:
+    elif avg_smape <= 20.0:
         qualitative_label = 'moderate'
     else:
         qualitative_label = 'poor'
     
     return qualitative_label
 
-def avg_percent_abs_diff(values):
-    """Average percentage absolute difference among a set of values. The 
-    result is computed by taking each of the values at a time as the reference
-    and averaging the results.
+def smape(a, f):
+    """Symmetric mean absolute percentage error (SMAPE). Based on the formula
+    on page 406 of [1], but with the factor '2' at the denominator removed
+    so as to have results bounded in [0,100].
     
     Parameters
     ----------
-    values : list of numerics.
-    
+    a : iterable of numerics
+        The actual (target) values.
+    f : iterable of numerics
+        The forecasted (predicted) values.
+    NOTE: a and f must have the same length.
+        
     Returns
     -------
-    avg_abs_diff : float
-        The average absolute difference (as a percentage).
+    smape_value : float
+        The error value.
+        
+    References
+    ----------
+    Goodwin, P., Lawton, R. On the asymmetry of the symmetric MAPE (1999) 
+    International Journal of Forecasting, 15 (4), pp. 405-408.
     """
     
-    abs_relative_diffs = list()
-    tol = 1e-05
+    smape_value = 0.0
     
-    values = values - np.mean(values)
+    if len(a) != len(f):
+        raise Exception('The actual and forecasted values must have the '
+                        'same length')    
     
-    for idx_ref_value, ref_value in enumerate(values):
-        idxs_other_values = list(range(len(values)))
-        idxs_other_values.remove(idx_ref_value)
-        for idx_other_value in idxs_other_values:
-            other_value = values[idx_other_value]
-            
-            #Check for null values
-            if abs(ref_value) > tol:    
-                abs_relative_diff = 100 * abs((ref_value - other_value)/ref_value)
-            else:
-                abs_relative_diff = 0.0
-            abs_relative_diffs.append(abs_relative_diff)
-            
-    avg_abs_diff = np.mean(abs_relative_diffs)
-    return avg_abs_diff
+    #Remove zero values to avoid NaN
+    nonzero_a_f = np.intersect1d(a.nonzero(), f.nonzero())
+    if len(nonzero_a_f) > 0:
+        a = a[nonzero_a_f]
+        f = f[nonzero_a_f]
+        smape_value = 1/len(a) *\
+            np.sum(np.abs(f-a) / (np.abs(a) + np.abs(f))*100)
+    else:
+        warnings.warn(f"SMAPE: no non-zero values in the input arrays, " +\
+                      f"returning default value ({smape_value})")
+    return smape_value
+
+def avg_smape(values):
+    """Average symmetric mean absolute percentage error over an array of
+    values. The values ideally represent the results of repeated mesurements
+    on the same subject.
+    
+    Parameters
+    ----------
+    values : iterable of numerics.
+       The input values.
+       
+    Returns
+    -------
+    avg_smape : float
+       The average SMAPE.
+    """
+    
+    #Get all the pairwise combinations (order matters) and consider the first
+    #element as the target and the second as the forecast
+    indices = list(range(len(values)))
+    combs = permutations(indices, 2)
+    targets = list()
+    forecasts = list()
+    for comb in combs:
+        targets.append(values[comb[0]])
+        forecasts.append(values[comb[1]])
+        
+    avg_smape = smape(np.asarray(targets), np.asarray(forecasts))
+    return avg_smape
+    
  
     
     

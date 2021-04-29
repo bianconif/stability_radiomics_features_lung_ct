@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pylidc as pl
 
-from functions import grade_stability, avg_percent_abs_diff
+from functions import grade_stability, avg_smape
 from utilities import DBDriver
 
 #Number of discretization levels at which the analysis is performed
@@ -36,7 +36,7 @@ df_resampling_stability = pd.DataFrame(columns = ['feature_name', 'feature_class
 #Iterate through the available features and compute the icc for each of them
 for feature_name in available_features:
     
-    abs_relative_variation = list()
+    smape_all_nodules = list()
       
     for patient_id in patient_ids:
         nodule_ids = db_driver.get_nodule_ids_by_patient(patient_id)
@@ -54,22 +54,20 @@ for feature_name in available_features:
             
             #Compute the average relative variation by nodule and append it to 
             #the list
-            abs_relative_variation_by_nodule = avg_percent_abs_diff(
-                feature_values_by_sampling_levels)
-            abs_relative_variation.append(abs_relative_variation_by_nodule)
-            a = 0
+            smape_this_nodule = avg_smape(feature_values_by_sampling_levels)
+            smape_all_nodules.append(smape_this_nodule)
         
     #Compute the average relative variation for the whole population
-    avg_abs_relative_variation = np.mean(abs_relative_variation)
+    avg_smape_population = np.mean(smape_all_nodules)
 
     print(f'Feature: {feature_name}; '
-          f'Average absolute variation: {avg_abs_relative_variation:.2f}%')
+          f'Average SMAPE: {avg_smape_population:.2f}%')
     
     #Generate record for csv output
     results_row = {'feature_class' : feature_name.split('/', 1)[0],
                    'feature_name' : feature_name.split('/', 1)[1],
-                   'stability' : grade_stability(avg_abs_relative_variation),
-                   'ICC' : avg_abs_relative_variation}    
+                   'stability' : grade_stability(avg_smape_population),
+                   'avg_smape' : avg_smape_population}    
     
     df_resampling_stability.append(results_row, ignore_index = True)
 df_resampling_stability.to_csv(out_file, index = False)
