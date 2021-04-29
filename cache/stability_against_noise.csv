@@ -1,7 +1,0 @@
-feature_name,feature_class,ICC,stability
-Mean,firstorder,1.0,excellent
-Max,firstorder,0.99,excellent
-Min,firstorder,0.996,excellent
-Std,firstorder,0.999,excellent
-Entropy,firstorder,0.999,excellent
-JointEntropy,glcm,0.999,excellent

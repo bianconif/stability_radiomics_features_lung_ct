@@ -25,7 +25,6 @@ out_file = 'cache/stability_against_resampling.csv'
 
 #Get the list of patients IDs
 patient_ids = db_driver.get_patients_ids()
-patient_ids = patient_ids[0:6]  #DEBUG
 
 #Get the list of the features available
 available_features = db_driver.get_feature_names()
@@ -69,7 +68,7 @@ for feature_name in available_features:
         df_data_matrix['patient_and_nodule_id'].tolist(),
         return_index = True, return_inverse = True) 
     df_data_matrix['patient_and_nodule_num_id'] = patient_and_nodule_num_id
-    
+        
     #Compute the intra-class correlation coefficient
     icc = pg.intraclass_corr(data = df_data_matrix, 
                              targets = 'patient_and_nodule_num_id', 
@@ -77,8 +76,8 @@ for feature_name in available_features:
                              ratings = 'feature_value').round(3)
     results_row = {'feature_class' : feature_name.split('/', 1)[0],
                    'feature_name' : feature_name.split('/', 1)[1],
-                   'stability' : grade_stability(icc['ICC'][2]),
-                   'ICC' : icc['ICC'][2]}
+                   'stability' : grade_stability(icc['ICC'][1]),
+                   'ICC' : icc['ICC'][1]}
     print(results_row)
     df_noise_icc = df_noise_icc.append(results_row, ignore_index = True)
 df_noise_icc.to_csv(out_file, index = False)
