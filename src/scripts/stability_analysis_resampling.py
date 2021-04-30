@@ -1,7 +1,6 @@
 """Stability of texture features against resampling"""
 import numpy as np
 import pandas as pd
-import pylidc as pl
 
 from functions import grade_stability, avg_smape
 from utilities import DBDriver
@@ -29,9 +28,9 @@ patient_ids = db_driver.get_patients_ids()
 available_features = db_driver.get_feature_names()
 #available_features = ['firstorder/Max']
 
-#Dataframe to store the ICC
+#Dataframe to store the results
 df_resampling_stability = pd.DataFrame(columns = ['feature_name', 'feature_class',
-                                       'ICC', 'stability'])
+                                       'avg_smape', 'stability'])
 
 #Iterate through the available features and compute the icc for each of them
 for feature_name in available_features:

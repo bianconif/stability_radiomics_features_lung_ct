@@ -1,9 +1,8 @@
 """Stability of texture features against lesion delineation"""
+import numpy as np
 import pandas as pd
-import pingouin as pg
-import pylidc as pl
 
-from functions import grade_stability
+from functions import grade_stability, avg_smape
 from utilities import DBDriver
 
 #Number of requested observers (different lesion delineations) for each nodule
@@ -25,6 +24,10 @@ out_file = 'cache/stability_against_delineation.csv'
 #Get the list of patients IDs
 patient_ids = db_driver.get_patients_ids()
 
+#Dataframe to store the results
+df_delineation_stability = pd.DataFrame(columns = ['feature_name', 'feature_class',
+                                       'avg_smape', 'stability'])
+
 #Select the nodules with the requested number of annotations
 selected_nodules = list()
 for patient_id in patient_ids:
@@ -40,55 +43,39 @@ for patient_id in patient_ids:
 #Get the list of the features available
 available_features = db_driver.get_feature_names()
 
-#Dataframe to store the ICC
-df_delineation_icc = pd.DataFrame(columns = ['feature_name', 
-                                             'feature_class',
-                                             'ICC',
-                                             'stability']
-                                  )
-
 #Iterate through the available features and compute the icc for each of them
 for feature_name in available_features:
     
-    #Data matrix to compute the ICC. Rows represent subjects, columns the
-    #feature values corresponding to each delineation
-    annotation_columns = ['feature_name', 'patient_id', 'nodule_id',
-                          'patient_and_nodule_id',
-                          'annotation_id']
-    df_data_matrix = pd.DataFrame(columns = annotation_columns)    
-    
+    smape_all_nodules = list()
+       
     for selected_nodule_id, selected_nodule in enumerate(selected_nodules):
         patient_id = selected_nodule['patient_id']
         nodule_id = selected_nodule['nodule_id']
         
-        #Fill the data matrix
-        data_row = {'feature_name' : feature_name,
-                    'patient_id' : patient_id,
-                    'nodule_id' : nodule_id,
-                    'patient_and_nodule_id' : selected_nodule_id,
-                    }
-
-        feature_values = db_driver.get_feature_values_by_annotation(
+        feature_values_by_delineation = db_driver.get_feature_values_by_annotation(
             patient_id, nodule_id, feature_name, num_levels, noise_scale)
-        for annotation_id, feature_value in enumerate(feature_values):
-            data_row.update({'feature_value' : feature_value,
-                             'annotation_id' : annotation_id})
-            df_data_matrix = df_data_matrix.append(data_row, 
-                                                   ignore_index = True)
+        
+        #Compute the average relative variation by nodule and append it to 
+        #the list
+        smape_this_nodule = avg_smape(feature_values_by_delineation)
+        smape_all_nodules.append(smape_this_nodule)        
+
     
-    #Compute the intra-class correlation coefficient
-    icc = pg.intraclass_corr(data = df_data_matrix, 
-                             targets = 'patient_and_nodule_id', 
-                             raters = 'annotation_id', 
-                             ratings = 'feature_value').round(3)
+    #Compute the average relative variation for the whole population
+    avg_smape_population = np.mean(smape_all_nodules)
+    
+    print(f'Feature: {feature_name}; '
+          f'Average SMAPE: {avg_smape_population:.2f}%')
+    
+    #Generate record for csv output
     results_row = {'feature_class' : feature_name.split('/', 1)[0],
                    'feature_name' : feature_name.split('/', 1)[1],
-                   'stability' : grade_stability(icc['ICC'][0]),
-                   'ICC' : icc['ICC'][0]}
-    print(results_row)
-    df_delineation_icc = df_delineation_icc.append(results_row, 
+                   'stability' : grade_stability(avg_smape_population),
+                   'avg_smape' : avg_smape_population}     
+    
+    df_delineation_stability = df_delineation_stability.append(results_row, 
                                                    ignore_index = True)
-df_delineation_icc.to_csv(out_file, index = False)
+df_delineation_stability.to_csv(out_file, index = False)
             
     
 
