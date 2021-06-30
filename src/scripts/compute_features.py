@@ -1,4 +1,6 @@
 """Compute the features"""
+import os
+
 import pandas as pd
 import pylidc as pl
 import PySimpleGUI as sg
@@ -16,6 +18,10 @@ cache_folder = 'cache'
 signal_cache = cache_folder + '/signal.nrrd'
 mask_cache = cache_folder + '/mask.nrrd'
 feature_db = cache_folder + '/features.db'
+
+#Create the cache folder if it doesn't exist
+if not os.path.isdir(cache_folder):
+    os.makedirs(name = cache_folder)
 
 #List of the features to compute
 first_order_statistics = ['Entropy', 'IQR', 'Kurtosis', 'MAD', 'Max', 'Mean', 
