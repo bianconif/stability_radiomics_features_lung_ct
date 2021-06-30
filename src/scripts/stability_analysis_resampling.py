@@ -26,7 +26,6 @@ patient_ids = db_driver.get_patients_ids()
 
 #Get the list of the features available
 available_features = db_driver.get_feature_names()
-#available_features = ['firstorder/Max']
 
 #Dataframe to store the results
 df_resampling_stability = pd.DataFrame(columns = ['feature_name', 'feature_class',
@@ -68,7 +67,8 @@ for feature_name in available_features:
                    'stability' : grade_stability(avg_smape_population),
                    'avg_smape' : avg_smape_population}    
     
-    df_resampling_stability.append(results_row, ignore_index = True)
+    df_resampling_stability = df_resampling_stability.append(
+        results_row, ignore_index = True)
 df_resampling_stability.to_csv(out_file, index = False)
             
     
