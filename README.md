@@ -3,7 +3,7 @@
 ## Description and usage
 
 This repository contains the code required for reproducing the results published in the following paper (in the remainder 'the paper'):
-* Bianconi, F., Palumbo I., Fravolini M.L., Palumbo, I., Pascoletti, G., Nuvoli, S., Rondini, M., Spanu, A. and Palumbo, B. __Impact of lesion delineation and intensity quantization on the stability of texture features from lung nodules on CT: a reproducible study__, Diagnostics (to appear)
+* Bianconi, F., Palumbo I., Fravolini M.L., Palumbo, I., Pascoletti, G., Nuvoli, S., Rondini, M., Spanu, A. and Palumbo, B. [Impact of lesion delineation and intensity quantization on the stability of texture features from lung nodules on CT: a reproducible study](https://www.mdpi.com/2075-4418/11/7/1224), Diagnostics, 11(7). art. no. 1224 (2021)
 
 ### Computing the features
 * Run the `src/scripts/compute_features.py` to compute the texture features. The results will be stored into the `features` table within the `cache/feature.db` file (use [SQLite](https://www.sqlite.org/index.html) to inspect the content). The calculation may require from a few minutes to several hours depending on the number of features and the combinations of parameters requested.
